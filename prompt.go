@@ -36,11 +36,15 @@ func NewPrompt(question string) (p Prompt) {
 	return
 }
 
+//////////////////////////////////////////////////////////////////
+// Option Functions
+//////////////////////////////////////////////////////////////////
+
 // AddOption is the correct way to add an option to a prompt.
 // Adds key and question to Options map[key]question.
 // Adds the key to Order []key.
 // If the key or question provided already exist, a FATAL blunder is reported.
-// An empty string key or question also results in a FATAL blunder being reported. 
+// An empty string for key or question also results in a FATAL blunder being reported. 
 func (p *Prompt) AddOption(key string, question string) (added bool) {
 	added = true
 	
@@ -73,7 +77,16 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 	return
 }
 
-func PromptUser(question string) (answer string, err error) {
+//////////////////////////////////////////////////////////////////
+// Option Functions
+//////////////////////////////////////////////////////////////////
+
+// QuickPrompt is the most basic function that will promp a user.
+// It is the only function that can prompt a user WITHOUT being called
+// as a method of a Prompt instance.
+// It uses an error type as it's 2nd return value instead of a blunder for simplicities sake.
+// The user input is stopped being captured at the first detection of a newline \n.
+func QuickPrompt(question string) (answer string, err error) {
 	rdr := bufio.NewReader(os.Stdin)
 
 	fmt.Println(question)
@@ -91,11 +104,18 @@ func PromptUser(question string) (answer string, err error) {
 	return
 }
 
-func (p *Prompt) Prompt() (answer string, blndr blunders.Blunder) {
+// PromptUser is default way to prompt a user.
+// If the prompt instance has any options, they are automatically loaded
+// and presented to the user.
+// If options are presented, the function will return a non-fatal blunder
+// if the answer provided is NOT an option.
+// The answer is considered valid if it matches either an option key or an option question.
+// If the provided answer matches a key, answer will automatically be converted to the question value.
+func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 
 	question_string := p.optionsQuestion()
 	var prompt_error error
-	answer, prompt_error = PromptUser(question_string)
+	answer, prompt_error = QuickPrompt(question_string)
 
 	if prompt_error != nil {
 		blndr = p.Blunders.New(2, prompt_error.Error())
@@ -118,15 +138,25 @@ func (p *Prompt) Prompt() (answer string, blndr blunders.Blunder) {
 	return
 }
 
-func (p *Prompt) PromptForOptions() (answer string, blndr blunders.Blunder) {
-	answer, blndr = p.Prompt()
+// PromptRequireOption is very similar to PromptUser but will continue to
+// prompt the user until a valid option is entered.
+func (p *Prompt) PromptRequireOption() (answer string, blndr blunders.Blunder) {
+	answer, blndr = p.PromptUser()
 	for ; blndr.Code != 0 ; {
 		fmt.Println("!!"+blndr.Message)
-		answer, blndr = p.Prompt()
+		answer, blndr = p.PromptUser()
 	}
 	return
 }
 
+//////////////////////////////////////////////////////////////////
+// Helper Functions
+//////////////////////////////////////////////////////////////////
+
+// optionsQuestion combines all options into 1 string that will display
+// one option per line in the command line.
+// The combined option string is added to the back of the qustion and
+// returned as one string.
 func (p *Prompt) optionsQuestion() (question string) {
 	question = p.Question
 
@@ -137,6 +167,9 @@ func (p *Prompt) optionsQuestion() (question string) {
 	return
 }
 
+// answerInOptions takes an answer string and checks to see if an identical
+// string exists as either a option key or an option question.
+// Returns true if a match is found and false if no match is found.
 func(p* Prompt) answerInOptions(answer string) (exists bool) {
 	for key, option := range p.Options {
 		if option == answer {
@@ -145,7 +178,6 @@ func(p* Prompt) answerInOptions(answer string) (exists bool) {
 		}
 		if key == answer {
 			exists = true
-			answer = option
 			return
 		}
 	}
