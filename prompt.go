@@ -78,7 +78,7 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 }
 
 //////////////////////////////////////////////////////////////////
-// Option Functions
+// User Prompting Functions
 //////////////////////////////////////////////////////////////////
 
 // QuickPrompt is the most basic function that will promp a user.
