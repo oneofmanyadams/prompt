@@ -23,6 +23,7 @@ type Prompt struct {
 	Order []string
 	Answer string
 	InputFrom io.Reader
+	OuputTo io.Writer
 	Blunders blunders.Blunders
 }
 
@@ -38,6 +39,7 @@ func NewPrompt(question string) (p Prompt) {
 	p.Blunders.AddCode(1, "OptionAddError")
 	p.Blunders.AddCode(2, "UserInputError")
 	p.InputFrom = os.Stdin
+	p.OuputTo = os.Stdout
 	return
 }
 
@@ -95,6 +97,7 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 func QuickPrompt(question string, input_from io.Reader) (answer string, err error) {
 	rdr := bufio.NewReader(input_from)
 
+	//os.Stdout.Write([]byte("test\n"))
 	fmt.Println(question)
 	fmt.Print("#:")
 
@@ -198,4 +201,8 @@ func(p* Prompt) answerInOptions(answer string) (exists bool) {
 // will get it's input from. (defaults to os.Stdin on initialization in NewPrompt(string))
 func (p* Prompt) GetInputFrom(input io.Reader) {
 	p.InputFrom = input
+}
+
+func (p* Prompt) SendOutputTo(output io.Writer) {
+	p.OutputTo = output
 }
