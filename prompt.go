@@ -4,6 +4,7 @@ package prompt
 import (
 	"fmt"
 	"os"
+	"io"
 	"bufio"
 	"strings"
 	"blunders"
@@ -14,17 +15,20 @@ import (
 //  - Options is a map of an option_id and it's associated name.
 //  - Order keeps track of what order options are added in and makes sure they are always displayed in that order.
 //  - Answer provides a place to store the most recent answer provided by the user.
+//  - InputFrom determines where to get user input from. (os.Stdin is the usual setting)
 //  - Blunders the implementation of a custom package that expands error recording and handling.
 type Prompt struct {
 	Question string
 	Options map[string]string
 	Order []string
 	Answer string
+	InputFrom io.Reader
 	Blunders blunders.Blunders
 }
 
 // NewPrompt creates a new instace of Prompt.
 // Sets the Question and initializes the Options map.
+// Sets InputFrom to os.Stdin
 // Initializes the Blunders instance.
 // This is where all Blunder Codes are created. 
 func NewPrompt(question string) (p Prompt) {
@@ -33,6 +37,7 @@ func NewPrompt(question string) (p Prompt) {
 	p.Blunders = blunders.NewBlunders("Prompt")
 	p.Blunders.AddCode(1, "OptionAddError")
 	p.Blunders.AddCode(2, "UserInputError")
+	p.InputFrom = os.Stdin
 	return
 }
 
@@ -84,10 +89,11 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 // QuickPrompt is the most basic function that will promp a user.
 // It is the only function that can prompt a user WITHOUT being called
 // as a method of a Prompt instance.
+// 2nd argument is an io.Reader to where the input is coming from (typically os.Stdin).
 // It uses an error type as it's 2nd return value instead of a blunder for simplicities sake.
 // The user input is stopped being captured at the first detection of a newline \n.
-func QuickPrompt(question string) (answer string, err error) {
-	rdr := bufio.NewReader(os.Stdin)
+func QuickPrompt(question string, input_from io.Reader) (answer string, err error) {
+	rdr := bufio.NewReader(input_from)
 
 	fmt.Println(question)
 	fmt.Print("#:")
@@ -115,7 +121,7 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 
 	question_string := p.optionsQuestion()
 	var prompt_error error
-	answer, prompt_error = QuickPrompt(question_string)
+	answer, prompt_error = QuickPrompt(question_string, p.InputFrom)
 
 	if prompt_error != nil {
 		blndr = p.Blunders.New(2, prompt_error.Error())
@@ -182,4 +188,14 @@ func(p* Prompt) answerInOptions(answer string) (exists bool) {
 		}
 	}
 	return
+}
+
+//////////////////////////////////////////////////////////////////
+// Utility Functions
+//////////////////////////////////////////////////////////////////
+
+// GetInputFrom provides and easy way to change where a Prompt instance
+// will get it's input from. (defaults to os.Stdin on initialization in NewPrompt(string))
+func (p* Prompt) GetInputFrom(input io.Reader) {
+	p.InputFrom = input
 }

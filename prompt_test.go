@@ -1,6 +1,9 @@
 package prompt
 
-import "testing"
+import (
+	"testing"
+	"strings"
+)
 
 
 //////////////////////////////////////////////////////////////////
@@ -93,6 +96,14 @@ func TestAddOption_add_empty_value(t *testing.T) {
 // User Prompting Tests
 //////////////////////////////////////////////////////////////////
 
-func QuickPromptTest(t *testing.T) {
-	//need to figure out a way to simulate os.Stdin
+func TestQuickPrompt(t *testing.T) {
+	answer := "Answer"
+	result, err := QuickPrompt("Question", strings.NewReader(answer+"\n"))
+
+	if result != answer {
+		t.Errorf("Did not return the information the way the user provided it.")
+	}
+	if err != nil {
+		t.Errorf("Failed with Error: "+ err.Error())
+	}
 }
