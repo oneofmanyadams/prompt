@@ -3,6 +3,8 @@ package prompt
 import (
 	"testing"
 	"strings"
+	"time"
+	"os"
 )
 
 
@@ -105,5 +107,179 @@ func TestQuickPrompt(t *testing.T) {
 	}
 	if err != nil {
 		t.Errorf("Failed with Error: "+ err.Error())
+	}
+}
+
+func TestPromptUser_without_options(t *testing.T) {
+	answer := "Answer"
+	prmpt := NewPrompt("TestQuestion")
+	prmpt.GetInputFrom(strings.NewReader(answer+"\n"))
+	result, blndr := prmpt.PromptUser()
+
+	if result != answer {
+		t.Errorf("Result did not match user input. Got: %s, Expected: %s", result, answer)
+	}
+	if blndr.Message != "" {
+		t.Errorf("Got Blunder: "+blndr.Error())
+	}
+
+}
+
+func TestPromptUser_using_keys(t *testing.T) {
+
+	type test_struct struct {
+		k string
+		v string
+	}
+	tables := []test_struct{
+			{"1", "one"},
+			{"2", "two"},
+			{"3", "three"}}
+
+
+	prmpt := NewPrompt("TestQuestion")
+
+	for _, tester := range tables {
+		prmpt.AddOption(tester.k, tester.v)
+	}
+
+	for _, answer := range tables {
+		prmpt.GetInputFrom(strings.NewReader(answer.k+"\n"))
+		result, blndr := prmpt.PromptUser()
+		if result != answer.v {
+			t.Errorf("Did not get expected result based on answer. got: %s, expected: %s.", result, answer.v)
+		}
+		if blndr.Message != "" {
+			t.Errorf("Got Blunder: "+blndr.Error())
+		}
+		if len(prmpt.Blunders.Reported) > 0 {
+			blunder_string := prmpt.Blunders.BlunderListToLogString(prmpt.Blunders.Reported)
+			t.Errorf("Found Blunders: \n"+blunder_string)
+		}
+	}
+
+}
+
+func TestPromptUser_using_values(t *testing.T) {
+
+	type test_struct struct {
+		k string
+		v string
+	}
+	tables := []test_struct{
+			{"1", "one"},
+			{"2", "two"},
+			{"3", "three"}}
+
+
+	prmpt := NewPrompt("TestQuestion")
+
+	for _, tester := range tables {
+		prmpt.AddOption(tester.k, tester.v)
+	}
+
+	for _, answer := range tables {
+		prmpt.GetInputFrom(strings.NewReader(answer.v+"\n"))
+		result, blndr := prmpt.PromptUser()
+		if result != answer.v {
+			t.Errorf("Did not get expected result based on answer. got: %s, expected: %s.", result, answer.v)
+		}
+		if blndr.Message != "" {
+			t.Errorf("Got Blunder: "+blndr.Error())
+		}
+		if len(prmpt.Blunders.Reported) > 0 {
+			blunder_string := prmpt.Blunders.BlunderListToLogString(prmpt.Blunders.Reported)
+			t.Errorf("Found Blunders: \n"+blunder_string)
+		}
+	}
+
+}
+
+func TestPromptUser_wrong_option(t *testing.T) {
+	prmpt := NewPrompt("TestQuestion")
+	prmpt.AddOption("1", "one")
+	prmpt.GetInputFrom(strings.NewReader("4\n"))
+
+	result, blndr := prmpt.PromptUser()
+
+	if result != "" {
+		t.Errorf("Failed to set result to empty string. Returned \"%s\" instead", result)
+	}
+	if blndr.Message == "" {
+		t.Errorf("Failed to record a blunder")
+	}
+
+}
+
+// This whole func seems a bit wonky
+func TestPromptRequireOption(t *testing.T) {
+	p := NewPrompt("Test Question")
+	prmpt := &p
+	prmpt.AddOption("1", "one")
+	prmpt.GetInputFrom(strings.NewReader("4\n"))
+
+	// This is kinda weird. Should review this.
+	go func(p *Prompt) {
+		time.Sleep(1 * time.Millisecond)
+		prmpt.GetInputFrom(strings.NewReader("1\n"))
+	}(prmpt)
+
+	result, _ := prmpt.PromptRequireOption()
+
+	if result != "one" {
+		t.Errorf("Never recovered")
+	}
+	if len(prmpt.Blunders.Reported) < 1 {
+		t.Errorf("Failed to record a blunder")
+	}
+}
+
+func TestOptionsQuestion(t *testing.T) {
+	options := [][2]string{{"1", "one"},{"2", "two"}}	
+	
+	prmpt := NewPrompt("Test Question")
+	option_string_manual := prmpt.Question
+
+	for _, option := range options {
+		prmpt.AddOption(option[0], option[1])
+		option_string_manual = option_string_manual + " \n "+option[0]+" "+option[1]
+	}
+
+	options_string_generated := prmpt.optionsQuestion()
+
+	if options_string_generated != option_string_manual {
+		t.Errorf("Generated option string does not match manually built one.")
+	}
+}
+
+func TestAnswerInOptions(t *testing.T) {
+	prmpt := NewPrompt("TestQuestion")
+	prmpt.AddOption("1", "one")
+	prmpt.AddOption("2", "two")
+	prmpt.AddOption("3", "three")
+
+	if !prmpt.answerInOptions("1") {
+		t.Errorf("Existing key answer did not return true.")
+	}
+	if !prmpt.answerInOptions("two") {
+		t.Errorf("Existing value answer did not return true.")
+	}
+	if prmpt.answerInOptions("four") {
+		t.Errorf("Non-Existing answer returned true.")
+	}
+
+}
+
+func TestGetInputFrom(t *testing.T) {
+	prmpt := NewPrompt("TestQuestion")
+
+	if prmpt.InputFrom != os.Stdin {
+		t.Errorf("InputFrom not defaulting to os.Stdin.")
+	}
+
+	prmpt.GetInputFrom(strings.NewReader("1\n"))
+
+	if prmpt.InputFrom == os.Stdin {
+		t.Errorf("GetInputFrom is not setting to provided value.")
 	}
 }
