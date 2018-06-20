@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 	"os"
+	"io/ioutil"
 )
 
 
@@ -100,7 +101,7 @@ func TestAddOption_add_empty_value(t *testing.T) {
 
 func TestQuickPrompt(t *testing.T) {
 	answer := "Answer"
-	result, err := QuickPrompt("Question", strings.NewReader(answer+"\n"))
+	result, err := QuickPrompt("Question", strings.NewReader(answer+"\n"), ioutil.Discard)
 
 	if result != answer {
 		t.Errorf("Did not return the information the way the user provided it.")
@@ -114,6 +115,7 @@ func TestPromptUser_without_options(t *testing.T) {
 	answer := "Answer"
 	prmpt := NewPrompt("TestQuestion")
 	prmpt.GetInputFrom(strings.NewReader(answer+"\n"))
+	prmpt.SendOutputTo(ioutil.Discard)
 	result, blndr := prmpt.PromptUser()
 
 	if result != answer {
@@ -145,6 +147,7 @@ func TestPromptUser_using_keys(t *testing.T) {
 
 	for _, answer := range tables {
 		prmpt.GetInputFrom(strings.NewReader(answer.k+"\n"))
+		prmpt.SendOutputTo(ioutil.Discard)
 		result, blndr := prmpt.PromptUser()
 		if result != answer.v {
 			t.Errorf("Did not get expected result based on answer. got: %s, expected: %s.", result, answer.v)
@@ -180,6 +183,7 @@ func TestPromptUser_using_values(t *testing.T) {
 
 	for _, answer := range tables {
 		prmpt.GetInputFrom(strings.NewReader(answer.v+"\n"))
+		prmpt.SendOutputTo(ioutil.Discard)
 		result, blndr := prmpt.PromptUser()
 		if result != answer.v {
 			t.Errorf("Did not get expected result based on answer. got: %s, expected: %s.", result, answer.v)
@@ -199,6 +203,7 @@ func TestPromptUser_wrong_option(t *testing.T) {
 	prmpt := NewPrompt("TestQuestion")
 	prmpt.AddOption("1", "one")
 	prmpt.GetInputFrom(strings.NewReader("4\n"))
+	prmpt.SendOutputTo(ioutil.Discard)
 
 	result, blndr := prmpt.PromptUser()
 
@@ -217,6 +222,7 @@ func TestPromptRequireOption(t *testing.T) {
 	prmpt := &p
 	prmpt.AddOption("1", "one")
 	prmpt.GetInputFrom(strings.NewReader("4\n"))
+	prmpt.SendOutputTo(ioutil.Discard)
 
 	// This is kinda weird. Should review this.
 	go func(p *Prompt) {
@@ -238,6 +244,8 @@ func TestOptionsQuestion(t *testing.T) {
 	options := [][2]string{{"1", "one"},{"2", "two"}}	
 	
 	prmpt := NewPrompt("Test Question")
+	prmpt.SendOutputTo(ioutil.Discard)
+
 	option_string_manual := prmpt.Question
 
 	for _, option := range options {
@@ -278,6 +286,8 @@ func TestGetInputFrom(t *testing.T) {
 	}
 
 	prmpt.GetInputFrom(strings.NewReader("1\n"))
+	prmpt.SendOutputTo(ioutil.Discard)
+
 
 	if prmpt.InputFrom == os.Stdin {
 		t.Errorf("GetInputFrom is not setting to provided value.")

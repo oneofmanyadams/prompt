@@ -16,6 +16,7 @@ import (
 //  - Order keeps track of what order options are added in and makes sure they are always displayed in that order.
 //  - Answer provides a place to store the most recent answer provided by the user.
 //  - InputFrom determines where to get user input from. (os.Stdin is the usual setting)
+//  - OutoutTo determines where to return all notifications to. (os.Stdout is the usual setting)
 //  - Blunders the implementation of a custom package that expands error recording and handling.
 type Prompt struct {
 	Question string
@@ -23,13 +24,14 @@ type Prompt struct {
 	Order []string
 	Answer string
 	InputFrom io.Reader
-	OuputTo io.Writer
+	OutputTo io.Writer
 	Blunders blunders.Blunders
 }
 
 // NewPrompt creates a new instace of Prompt.
 // Sets the Question and initializes the Options map.
 // Sets InputFrom to os.Stdin
+// Sets OutputTo to os.Stdout
 // Initializes the Blunders instance.
 // This is where all Blunder Codes are created. 
 func NewPrompt(question string) (p Prompt) {
@@ -39,7 +41,7 @@ func NewPrompt(question string) (p Prompt) {
 	p.Blunders.AddCode(1, "OptionAddError")
 	p.Blunders.AddCode(2, "UserInputError")
 	p.InputFrom = os.Stdin
-	p.OuputTo = os.Stdout
+	p.OutputTo = os.Stdout
 	return
 }
 
@@ -92,14 +94,15 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 // It is the only function that can prompt a user WITHOUT being called
 // as a method of a Prompt instance.
 // 2nd argument is an io.Reader to where the input is coming from (typically os.Stdin).
+// 3rd argument is an io.Writer to where the output is going to (typically os.Stdout).
 // It uses an error type as it's 2nd return value instead of a blunder for simplicities sake.
 // The user input is stopped being captured at the first detection of a newline \n.
-func QuickPrompt(question string, input_from io.Reader) (answer string, err error) {
+func QuickPrompt(question string, input_from io.Reader, output_to io.Writer) (answer string, err error) {
 	rdr := bufio.NewReader(input_from)
 
 	//os.Stdout.Write([]byte("test\n"))
-	fmt.Println(question)
-	fmt.Print("#:")
+	output_to.Write([]byte(question+"\n"))
+	output_to.Write([]byte("#:"+"\n"))
 
 	raw_answer, read_error := rdr.ReadString('\n')
 
@@ -124,7 +127,7 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 
 	question_string := p.optionsQuestion()
 	var prompt_error error
-	answer, prompt_error = QuickPrompt(question_string, p.InputFrom)
+	answer, prompt_error = QuickPrompt(question_string, p.InputFrom, p.OutputTo)
 
 	if prompt_error != nil {
 		blndr = p.Blunders.New(2, prompt_error.Error())
@@ -152,7 +155,7 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 func (p *Prompt) PromptRequireOption() (answer string, blndr blunders.Blunder) {
 	answer, blndr = p.PromptUser()
 	for ; blndr.Code != 0 ; {
-		fmt.Println("!!"+blndr.Message)
+		p.OutputTo.Write([]byte("!!"+blndr.Message))
 		answer, blndr = p.PromptUser()
 	}
 	return
@@ -202,7 +205,8 @@ func(p* Prompt) answerInOptions(answer string) (exists bool) {
 func (p* Prompt) GetInputFrom(input io.Reader) {
 	p.InputFrom = input
 }
-
+// SendOutputTo provides and easy way to change where a Prompt instance
+// will send all output tp. (defaults to os.Stdout on initialization in NewPrompt(string))
 func (p* Prompt) SendOutputTo(output io.Writer) {
 	p.OutputTo = output
 }
