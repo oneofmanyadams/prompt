@@ -11,13 +11,14 @@ import (
 )
 
 // Prompt is the main type for the promp package.
+// It is initialized with the NewPrompt() method and should NOT be created with var new_promp Prompt.
 //  - Question is the question that the user will be prompted with.
 //  - Options is a map of an option_id and it's associated name.
-//  - Order keeps track of what order options are added in and makes sure they are always displayed in that order.
+//  - Order keeps track of what order options are added in to help ensure they are always displayed in that order.
 //  - Answer provides a place to store the most recent answer provided by the user.
 //  - InputFrom determines where to get user input from. (os.Stdin is the usual setting)
 //  - OutoutTo determines where to return all notifications to. (os.Stdout is the usual setting)
-//  - Blunders the implementation of a custom package that expands error recording and handling.
+//  - Blunders is the implementation of a custom package that expands error recording and handling.
 type Prompt struct {
 	Question string
 	Options map[string]string
@@ -90,17 +91,16 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 // User Prompting Functions
 //////////////////////////////////////////////////////////////////
 
-// QuickPrompt is the most basic function that will promp a user.
+// QuickPrompt is the most basic function that will prompt a user.
 // It is the only function that can prompt a user WITHOUT being called
 // as a method of a Prompt instance.
 // 2nd argument is an io.Reader to where the input is coming from (typically os.Stdin).
 // 3rd argument is an io.Writer to where the output is going to (typically os.Stdout).
 // It uses an error type as it's 2nd return value instead of a blunder for simplicities sake.
-// The user input is stopped being captured at the first detection of a newline \n.
+// The user input stops being captured at the first detection of a newline "\n".
 func QuickPrompt(question string, input_from io.Reader, output_to io.Writer) (answer string, err error) {
 	rdr := bufio.NewReader(input_from)
 
-	//os.Stdout.Write([]byte("test\n"))
 	output_to.Write([]byte(question+"\n"))
 	output_to.Write([]byte("#:"+"\n"))
 
@@ -128,20 +128,24 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 	question_string := p.optionsQuestion()
 	var prompt_error error
 	answer, prompt_error = QuickPrompt(question_string, p.InputFrom, p.OutputTo)
+	p.Answer = answer
 
 	if prompt_error != nil {
 		blndr = p.Blunders.New(2, prompt_error.Error())
 		answer = ""
+		p.Answer = ""
 	}
 	
 	if len(p.Options) > 0 && blndr.Fatal == false {
 		if p.answerInOptions(answer) == false {
 			blndr = p.Blunders.New(2, fmt.Sprintf("Option provided (%s) does not exist.", answer))
 			answer = ""
+			p.Answer = answer
 		} else {
 			for key := range p.Options {
 				if key == answer {
 					answer = p.Options[key]
+					p.Answer = answer
 				}
 			}
 		}
