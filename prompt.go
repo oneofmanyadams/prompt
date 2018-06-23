@@ -10,10 +10,10 @@ import (
 	"blunders"
 )
 
-// Prompt is the main type for the promp package.
+// Prompt is the main type for the prompt package.
 // It is initialized with the NewPrompt() method and should NOT be created with var new_promp Prompt.
 //  - Question is the question that the user will be prompted with.
-//  - Options is a map of an option_id and it's associated name.
+//  - Options is a map of an option_id and it's associated name. (The options presented to a user)
 //  - Order keeps track of what order options are added in to help ensure they are always displayed in that order.
 //  - Answer provides a place to store the most recent answer provided by the user.
 //  - InputFrom determines where to get user input from. (os.Stdin is the usual setting)
@@ -54,7 +54,8 @@ func NewPrompt(question string) (p Prompt) {
 // Adds key and question to Options map[key]question.
 // Adds the key to Order []key.
 // If the key or question provided already exist, a FATAL blunder is reported.
-// An empty string for key or question also results in a FATAL blunder being reported. 
+// An empty string for key or question also results in a FATAL blunder being reported.
+// Returns true if the option was added to the prompt instance and false if it was not added.
 func (p *Prompt) AddOption(key string, question string) (added bool) {
 	added = true
 	
