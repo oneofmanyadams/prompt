@@ -53,12 +53,16 @@ func NewPrompt(question string) (p Prompt) {
 // AddOption is the correct way to add an option to a prompt.
 // Adds key and question to Options map[key]question.
 // Adds the key to Order []key.
+// Prepended and appended whitespace is stripped from both key and question.
 // If the key or question provided already exist, a FATAL blunder is reported.
 // An empty string for key or question also results in a FATAL blunder being reported.
 // Returns true if the option was added to the prompt instance and false if it was not added.
 func (p *Prompt) AddOption(key string, question string) (added bool) {
 	added = true
 	
+	key = strings.TrimSpace(key)
+	question = strings.TrimSpace(question)
+
 	if key == "" {
 		p.Blunders.NewFatal(1, "Empty string provided for key.")
 		added = false
@@ -99,6 +103,7 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 // 3rd argument is an io.Writer to where the output is going to (typically os.Stdout).
 // It uses an error type as it's 2nd return value instead of a blunder for simplicities sake.
 // The user input stops being captured at the first detection of a newline "\n".
+// Prepended and appended whitespace is stripped from user input.
 func QuickPrompt(question string, input_from io.Reader, output_to io.Writer) (answer string, err error) {
 	rdr := bufio.NewReader(input_from)
 
@@ -160,7 +165,7 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 func (p *Prompt) PromptRequireOption() (answer string, blndr blunders.Blunder) {
 	answer, blndr = p.PromptUser()
 	for ; blndr.Code != 0 ; {
-		p.OutputTo.Write([]byte("!!"+blndr.Message))
+		p.OutputTo.Write([]byte("!!"+blndr.Message+"\n"))
 		answer, blndr = p.PromptUser()
 	}
 	return
