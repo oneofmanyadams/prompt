@@ -110,7 +110,7 @@ func QuickPrompt(question string, input_from io.Reader, output_to io.Writer) (an
 	rdr := bufio.NewReader(input_from)
 
 	output_to.Write([]byte(question+"\n"))
-	output_to.Write([]byte("#:"+"\n"))
+	output_to.Write([]byte("#: ")) //+"\n" <---- Do I need this?
 
 	raw_answer, read_error := rdr.ReadString('\n')
 
