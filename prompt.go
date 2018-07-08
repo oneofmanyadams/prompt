@@ -26,7 +26,7 @@ type Prompt struct {
 	Answer string
 	InputFrom io.Reader
 	OutputTo io.Writer
-	Blunders blunders.Blunders
+	Blunders *blunders.BlunderBus
 }
 
 // NewPrompt creates a new instace of Prompt.
@@ -38,13 +38,15 @@ type Prompt struct {
 func NewPrompt(question string) (p Prompt) {
 	p.Question = question
 	p.Options = make(map[string]string)
-	p.Blunders = blunders.NewBlunders("Prompt")
-	p.Blunders.AddCode(1, "OptionAddError")
-	p.Blunders.AddCode(2, "UserInputError")
+	p.Blunders = blunders.NewBlunderBus()
 	p.InputFrom = os.Stdin
 	p.OutputTo = os.Stdout
 	return
 }
+// p.Blunders.AddCode(1, "OptionAddError")
+// p.Blunders.AddCode(2, "UserInputError")
+
+
 
 //////////////////////////////////////////////////////////////////
 // Option Functions
@@ -64,22 +66,22 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 	question = strings.TrimSpace(question)
 
 	if key == "" {
-		p.Blunders.NewFatal(1, "Empty string provided for key.")
+		p.Blunders.NewFatal("PromptOption", "Empty string provided for key.")
 		added = false
 	}
 
 	if question == "" {
-		p.Blunders.NewFatal(1, "Empty string provided for question.")
+		p.Blunders.NewFatal("PromptOption", "Empty string provided for question.")
 		added = false
 	}
 	
 	for existing_key, existing_question := range p.Options {
 		if existing_key == key {
-			p.Blunders.NewFatal(1, fmt.Sprintf("Attempted to add already existing option key \"%s\".", key))
+			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option key \"%s\".", key))
 			added = false
 		}
 		if existing_question == question {
-			p.Blunders.NewFatal(1, fmt.Sprintf("Attempted to add already existing option question \"%s\".", question))
+			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option question \"%s\".", question))
 			added = false
 		}
 	}
@@ -137,14 +139,14 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 	p.Answer = answer
 
 	if prompt_error != nil {
-		blndr = p.Blunders.New(2, prompt_error.Error())
+		blndr = p.Blunders.New("PromptInput", prompt_error.Error())
 		answer = ""
 		p.Answer = ""
 	}
 	
 	if len(p.Options) > 0 && blndr.Fatal == false {
 		if p.answerInOptions(answer) == false {
-			blndr = p.Blunders.New(2, fmt.Sprintf("Option provided (%s) does not exist.", answer))
+			blndr = p.Blunders.New("PromptInput", fmt.Sprintf("Option provided (%s) does not exist.", answer))
 			answer = ""
 			p.Answer = answer
 		} else {
@@ -164,7 +166,7 @@ func (p *Prompt) PromptUser() (answer string, blndr blunders.Blunder) {
 // prompt the user until a valid option is entered.
 func (p *Prompt) PromptRequireOption() (answer string, blndr blunders.Blunder) {
 	answer, blndr = p.PromptUser()
-	for ; blndr.Code != 0 ; {
+	for ; blndr.Code != "" ; {
 		p.OutputTo.Write([]byte("!!"+blndr.Message+"\n"))
 		answer, blndr = p.PromptUser()
 	}
