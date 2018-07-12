@@ -43,10 +43,6 @@ func NewPrompt(question string) (p Prompt) {
 	p.OutputTo = os.Stdout
 	return
 }
-// p.Blunders.AddCode(1, "OptionAddError")
-// p.Blunders.AddCode(2, "UserInputError")
-
-
 
 //////////////////////////////////////////////////////////////////
 // Option Functions
@@ -77,11 +73,11 @@ func (p *Prompt) AddOption(key string, question string) (added bool) {
 	
 	for existing_key, existing_question := range p.Options {
 		if existing_key == key {
-			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option key \"%s\".", key))
+			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option key \"%s\" with question \"%s\".", key, question))
 			added = false
 		}
 		if existing_question == question {
-			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option question \"%s\".", question))
+			p.Blunders.NewFatal("PromptOption", fmt.Sprintf("Attempted to add already existing option question \"%s\" with key \"%s\".", question, key))
 			added = false
 		}
 	}
