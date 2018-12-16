@@ -141,6 +141,14 @@ func (p *Prompt) GetInput() {
 			p.AnswerKey = existing_key
 			p.AnswerValue = p.Options[existing_key]
 			p.ValidAnswer = true
+		} else {
+			p.AnswerKey = ""
+			p.AnswerValue = answer
+			p.ValidAnswer = false
 		}
-	}	
+	} else {
+		p.AnswerKey = ""
+		p.AnswerValue = answer
+		p.ValidAnswer = false
+	}
 }
