@@ -15,9 +15,6 @@ type Prompt struct {
 	Options map[string]string
 	OptionOrder []string
 
-	ExitKey string
-	ExitValue string
-
 	AnswerKey string
 	AnswerValue string
 	ValidAnswer bool
