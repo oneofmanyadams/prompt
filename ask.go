@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// as is the base function that performs the output of question q to the user
+// ask is the base function that performs the output of question q to the user
 // and returns the answer provided by the user.
 // If an error occurs, answer is an empty string.
 func ask(q string, input io.Reader, output io.Writer) (string, error) {
