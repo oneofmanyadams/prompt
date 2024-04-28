@@ -1,9 +1,11 @@
 package prompt
 
 import (
-	"errors"
+	"os"
 )
 
+// Basic is designed to provide a single line way to get user input
+// from the CLI.
 func Basic(question string) (answer string, err error) {
-	return "", errors.New("problem retreiving user input")
+	return ask(question, os.Stdin, os.Stdout)
 }
