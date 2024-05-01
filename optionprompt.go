@@ -40,3 +40,17 @@ func New(question string) OptionPrompt {
 ////////////////////////////////////////////////////////////////////////////////
 // Private Functions
 ////////////////////////////////////////////////////////////////////////////////
+
+func (s *OptionPrompt) optionExists(option_name string) (int, bool) {
+	for k, v := range s.Options {
+		if option_name == v {
+			return k, true
+		}
+	}
+	return len(s.Options), false
+}
+
+func (s *OptionPrompt) addOption(option_name string) int {
+	s.Options = append(s.Options, option_name)
+	return len(s.Options) - 1
+}
