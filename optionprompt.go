@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -17,7 +18,7 @@ type OptionPrompt struct {
 	Ask      bool
 
 	Input  io.Reader
-	Output io.Reader
+	Output io.Writer
 
 	UserInput string
 }
