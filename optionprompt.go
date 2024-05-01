@@ -58,6 +58,11 @@ func (s *OptionPrompt) Option(option_name string) bool {
 	return false
 }
 
+// PromptUser takes the OptionPrompt Question, appends all the options, and
+// sends that string to OptionPrompt's Output. It then reads what the user
+// provided through OptionPrompt's Input. This will only execute if OptionPrompt's
+// Ask value is true, if Ask is false it is assumed that the user already provided
+// valid input so we don't need to keep asking for input.
 func (s *OptionPrompt) PromptUser() {
 	// Only proceed if we still need user input.
 	if s.Ask == false {
