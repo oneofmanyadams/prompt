@@ -3,6 +3,7 @@ package prompt
 import (
 	"io"
 	"os"
+	"strconv"
 )
 
 // OptionPrompt is used for creating a set of options to present to a user.
@@ -36,6 +37,21 @@ func New(question string) OptionPrompt {
 ////////////////////////////////////////////////////////////////////////////////
 // Public Functions
 ////////////////////////////////////////////////////////////////////////////////
+
+func (s *OptionPrompt) Option(option_name string) bool {
+	option_key, option_exists := s.optionExists(option_name)
+	if option_exists == false {
+		option_key = s.addOption(option_name)
+	}
+
+	// Convert key to string to compare to user input.
+	if s.UserInput == strconv.Itoa(option_key) {
+		s.Answer = option_name
+		s.Ask = false
+		return true
+	}
+	return false
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private Functions
