@@ -38,6 +38,9 @@ func New(question string) OptionPrompt {
 // Public Functions
 ////////////////////////////////////////////////////////////////////////////////
 
+// Option takes an option_name as an input. If the provided option_name exists and
+// matches the user provided answer this function returns true, otherwise false
+// is returned. If the provided option_name does not already exist, it is created.
 func (s *OptionPrompt) Option(option_name string) bool {
 	option_key, option_exists := s.optionExists(option_name)
 	if option_exists == false {
