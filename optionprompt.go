@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+// OptionPrompt is used for creating a set of options to present to a user.
+// This struct should not be used directly, but instead created by calling
+// the New() function.
 type OptionPrompt struct {
 	Question string
 	Options  []string
