@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+// Basic is designed to provide a single line way to get user input
+// from the CLI.
+func Basic(question string) (answer string, err error) {
+	return ask(question, os.Stdin, os.Stdout)
+}
+
 // ask is the base function that performs the output of question q to the user
 // and returns the answer provided by the user.
 // If an error occurs, answer is an empty string.
@@ -28,10 +34,4 @@ func ask(q string, input io.Reader, output io.Writer) (string, error) {
 	answer := strings.TrimSpace(input_cleaner.Replace(raw_answer))
 
 	return answer, read_error
-}
-
-// Basic is designed to provide a single line way to get user input
-// from the CLI.
-func Basic(question string) (answer string, err error) {
-	return ask(question, os.Stdin, os.Stdout)
 }
