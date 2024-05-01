@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"io"
+	"log"
 	"os"
 	"strconv"
 )
@@ -54,6 +55,27 @@ func (s *OptionPrompt) Option(option_name string) bool {
 		return true
 	}
 	return false
+}
+
+func (s *OptionPrompt) PromptUser() {
+	// Only proceed if we still need user input.
+	if s.Ask == false {
+		return
+	}
+
+	// Build question string. Each option's slice key is used as the option
+	// presented to the user.
+	question := s.Question
+	for option_k, option_v := range s.Options {
+		question = fmt.Sprintf("%s\n %d %s", question, option_k, option_v)
+	}
+
+	// Prompt user for input.
+	user_input, err := ask(question, s.Input, s.Output)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.UserInput = user_input
 }
 
 ////////////////////////////////////////////////////////////////////////////////
